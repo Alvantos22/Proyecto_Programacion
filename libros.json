@@ -1,0 +1,43 @@
+[
+  {
+    "titulo": "Las rosas rojas",
+    "autor": "Alejandra",
+    "isbn": "276326W",
+    "genero": "Tragicomedia",
+    "disponible": false,
+    "stock": 23
+  },
+    {
+      "titulo": "1984",
+      "autor": "George Orwell",
+      "isbn": "978-0451524935",
+      "genero": "Distopía",
+      "disponible": true,
+      "stock": 3
+    },
+    {
+      "titulo": "El Quijote",
+      "autor": "Miguel de Cervantes",
+      "isbn": "978-8491810087",
+      "genero": "Novela",
+      "disponible": true,
+      "stock": 2
+    },
+    {
+      "titulo": "Clean Code",
+      "autor": "Robert C. Martin",
+      "isbn": "978-0132350884",
+      "genero": "Programación",
+      "disponible": true,
+      "stock": 5
+    },
+    {
+      "titulo": "El Principito",
+      "autor": "Antoine de Saint-Exupéry",
+      "isbn": "978-8408089865",
+      "genero": "Infantil",
+      "disponible": true,
+      "stock": 4
+    }
+
+]

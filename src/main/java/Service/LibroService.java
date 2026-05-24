@@ -1,21 +1,24 @@
 package Service;
 
-public class LibroService {
+import Dao.LibroDao;
 
-    public void agregarLibro(String titulo, String autor, String isbn) {
-        // Lógica para agregar un libro a la biblioteca
+import lombok.Data;
+
+
+@Data
+public class LibroService {
+    private LibroDao ld = new LibroDao();
+
+    public LibroService(LibroDao ld) {
+        this.ld = ld;
+
     }
-    public void eliminarLibro(String isbn) {
-        // Lógica para eliminar un libro de la biblioteca
+
+    public boolean agregarLibro(String titulo, String autor, String isbn, String genero, boolean disponible, int stock) {
+        return ld.agregarLibro(titulo, autor, isbn, genero, disponible, stock);
     }
-    public void actualizarDisponibilidad(String isbn, boolean disponible) {
-        // Lógica para actualizar la disponibilidad de un libro
-    }
-    public void buscarLibro(String titulo) {
-        // Lógica para buscar un libro por título
-    }
-    public void listarLibros() {
-        // Lógica para listar todos los libros disponibles en la biblioteca
+    public boolean agregarLibro(Domain.Libro libro) {
+        return ld.agregarLibro(libro);
     }
 
 }
