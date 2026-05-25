@@ -2,6 +2,7 @@ package Dao;
 
 import Domain.Libro;
 import Common.Constantes;
+import Common.ConfigManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.Data;
@@ -14,7 +15,7 @@ import java.util.List;
 @Data
 public class LibroDao {
     private List<Libro> listaLibros;
-    private final String libros = "libros.json";
+    private final String libros = ConfigManager.get("archivo.libros", "libros.json");
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private Logger logger = Logger.getLogger(LibroDao.class.getName());
 
@@ -56,7 +57,7 @@ public class LibroDao {
         logger.info(Constantes.INFO_EJEMPLOS_CARGADOS);
     }
 
-    public void guardarLibros() {
+    private void guardarLibros() {
         try (FileWriter fw = new FileWriter(libros)) {
             gson.toJson(listaLibros, fw);
             logger.info(Constantes.INFO_DATOS_GUARDADOS + "libros");
@@ -91,9 +92,15 @@ public class LibroDao {
         return chk;
     }
 
-    public void eliminarLibro(String isbn) {
-        listaLibros.removeIf(libro -> libro.getIsbn().equals(isbn));
-        guardarLibros();
+    public boolean eliminarLibro(String isbn) {
+        if (listaLibros.stream().anyMatch(libro -> libro.getIsbn().equals(isbn))) {
+            listaLibros.removeIf(libro -> libro.getIsbn().equals(isbn));
+            guardarLibros();
+            return true;
+        } else {
+            logger.warn(Constantes.WARN_REGISTRO_NO_ENCONTRADO + isbn);
+            return false;
+        }
     }
 
     public void actualizarLibro(String isbn, Libro libroActualizado) {
@@ -106,9 +113,14 @@ public class LibroDao {
         }
     }
 
-    public Libro buscarLibro(String isbn) {
+    public Libro buscarLibroIsbn(String isbn) {
         return listaLibros.stream().filter(libro -> libro.getIsbn().equals(isbn)).findFirst().orElse(null);
     }
+
+    public Libro buscarLibroTitulo(String titulo) {
+        return listaLibros.stream().filter(libro -> libro.getTitulo().equalsIgnoreCase(titulo)).findFirst().orElse(null);
+    }
+
 
     public List<Libro> listarLibros() {
         return new ArrayList<>(listaLibros);
@@ -151,4 +163,6 @@ public class LibroDao {
         }
     }
     */
+
+
 

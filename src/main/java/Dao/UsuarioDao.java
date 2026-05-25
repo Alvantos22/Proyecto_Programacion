@@ -1,6 +1,7 @@
 package Dao;
 
 import Common.Constantes;
+import Common.ConfigManager;
 import Domain.Usuario;
 import Domain.Rol;
 import com.google.gson.Gson;
@@ -14,7 +15,7 @@ import java.util.List;
 
 public class UsuarioDao {
     private List<Usuario> usuarios;
-    private final String users = "usuarios.json";
+    private final String users = ConfigManager.get("archivo.usuarios", "usuarios.json");
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private Logger logger = Logger.getLogger(UsuarioDao.class.getName());
 
@@ -45,9 +46,9 @@ public class UsuarioDao {
     }
 
     private void cargarEjemplos() {
-        agregarUsuario(new Usuario("Admin", "admin@mail.com", "admin123", Rol.ADMIN));
-        agregarUsuario(new Usuario("Juan", "juan@mail.com", "user123", Rol.USER));
-        agregarUsuario(new Usuario("Ana", "ana@mail.com", "user123", Rol.USER));
+        agregarUsuario(new Usuario("Admin", "admin@mail.com", "a123", Rol.ADMIN));
+        agregarUsuario(new Usuario("Juan", "juan@mail.com", "usr123", Rol.USER));
+        agregarUsuario(new Usuario("Ana", "ana@mail.com", "usr123", Rol.USER));
         logger.info(Constantes.INFO_EJEMPLOS_CARGADOS);
     }
 

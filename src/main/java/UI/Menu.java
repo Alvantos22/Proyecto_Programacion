@@ -1,15 +1,17 @@
 package UI;
 
+import Common.EntradaInvalidaException;
+import Common.Validaciones;
 import Dao.LibroDao;
-import Dao.UsuarioDao;
 import Dao.PrestamoDao;
-import Domain.Usuario;
+import Dao.UsuarioDao;
 import Domain.Libro;
-import Domain.Rol;
 import Domain.Prestamo;
-import Service.UsuarioService;
+import Domain.Rol;
+import Domain.Usuario;
 import Service.LibroService;
 import Service.PrestamoService;
+import Service.UsuarioService;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -20,7 +22,6 @@ public class Menu {
     private final UsuarioService usuarioService;
     private final LibroService libroService;
     private final PrestamoService prestamoService;
-    
     private Usuario usuarioLogueado = null;
 
     public Menu(UsuarioDao usuarioDao, LibroDao libroDao, PrestamoDao prestamoDao) {
@@ -33,7 +34,7 @@ public class Menu {
         boolean salir = false;
         while (!salir) {
             if (usuarioLogueado == null) {
-                salir = menuLogin();
+                salir = menuInicio();
             } else if (usuarioLogueado.getRol() == Rol.ADMIN) {
                 menuAdmin();
             } else {
@@ -43,200 +44,134 @@ public class Menu {
         scanner.close();
     }
 
-    // ============ MENÚ LOGIN ============
-    private boolean menuLogin() {
-        System.out.println("\n╔═══════════════════════════════════╗");
-        System.out.println("║       BIBLIOTECA - BIBLIOTECA      ║");
-        System.out.println("╚═══════════════════════════════════╝");
+    private boolean menuInicio() {
+        System.out.println("\n=== BIBLIOTECA ===");
         System.out.println("1. Iniciar sesión");
         System.out.println("2. Registrarse");
         System.out.println("3. Salir");
-        System.out.print("Selecciona opción: ");
+        System.out.print("Seleccione una opción: ");
 
-        String opcion = scanner.nextLine().trim();
-
-        switch (opcion) {
+        switch (scanner.nextLine().trim()) {
             case "1":
                 login();
-                break;
+                return false;
             case "2":
                 registrarse();
-                break;
+                return false;
             case "3":
-                System.out.println("¡Hasta luego!");
+                System.out.println("Hasta luego.");
                 return true;
             default:
-                System.out.println("❌ Opción inválida");
+                System.out.println("Opción inválida.");
+                return false;
         }
-        return false;
     }
 
     private void login() {
-        System.out.print("\nEmail: ");
-        String email = scanner.nextLine().trim();
-        System.out.print("Contraseña: ");
-        String password = scanner.nextLine().trim();
+        try {
+            String email = leerEmailValido();
+            String password = leerPasswordValida();
 
-        Usuario usuario = usuarioService.login(email, password);
-        if (usuario != null) {
-            usuarioLogueado = usuario;
-            System.out.println("\n✓ ¡Bienvenido, " + usuario.getNombre() + "!");
-        } else {
-            System.out.println("\n❌ Email o contraseña incorrectos");
+            Usuario usuario = usuarioService.login(email, password);
+            if (usuario != null) {
+                usuarioLogueado = usuario;
+                System.out.println("Bienvenido/a, " + usuario.getNombre() + ".");
+            } else {
+                System.out.println("Email o contraseña incorrectos.");
+            }
+        } catch (EntradaInvalidaException e) {
+            System.out.println(e.getMessage());
         }
     }
 
     private void registrarse() {
-        System.out.print("\nNombre: ");
+        System.out.print("Nombre: ");
         String nombre = scanner.nextLine().trim();
-        System.out.print("Email: ");
-        String email = scanner.nextLine().trim();
-        System.out.print("Contraseña: ");
-        String password = scanner.nextLine().trim();
 
-        boolean registrado = usuarioService.registrarUsuario(nombre, email, password);
-        if (registrado) {
-            System.out.println("\n✓ Usuario registrado exitosamente");
-        } else {
-            System.out.println("\n❌ El email ya está registrado o hay campos vacíos");
+        if (nombre.isBlank()) {
+            System.out.println("El nombre no puede estar vacío.");
+            return;
+        }
+
+        try {
+            String email = leerEmailValido();
+            String password = leerPasswordValida();
+
+            if (usuarioService.registrarUsuario(nombre, email, password)) {
+                System.out.println("Usuario registrado correctamente.");
+            }
+        } catch (EntradaInvalidaException e) {
+            System.out.println(e.getMessage());
         }
     }
 
-    // ============ MENÚ USUARIO (NORMAL) ============
+    private String leerEmailValido() {
+        System.out.print("Email: ");
+        String email = scanner.nextLine().trim();
+        if (!Validaciones.validarEmail(email)) {
+            throw new EntradaInvalidaException("Email inválido. Usa el formato algo@algo.");
+        }
+        return email;
+    }
+
+    private String leerPasswordValida() {
+        System.out.print("Contraseña: ");
+        String password = scanner.nextLine().trim();
+        if (!Validaciones.validarPassword(password)) {
+            throw new EntradaInvalidaException("Contraseña inválida. Mínimo 4 caracteres alfanuméricos.");
+        }
+        return password;
+    }
+
     private void menuUsuario() {
-        System.out.println("\n╔═══════════════════════════════════╗");
-        System.out.println("║    MENÚ USUARIO - " + usuarioLogueado.getNombre() + "           ║");
-        System.out.println("╚═══════════════════════════════════╝");
+        System.out.println("\n=== MENÚ USUARIO ===");
         System.out.println("1. Listar libros disponibles");
-        System.out.println("2. Buscar libro");
+        System.out.println("2. Buscar libro por título");
         System.out.println("3. Reservar libro");
         System.out.println("4. Ver mis reservas");
-        System.out.println("5. Cerrar sesión");
-        System.out.print("Selecciona opción: ");
+        System.out.println("5. Devolver libro");
+        System.out.println("6. Cerrar sesión");
+        System.out.print("Seleccione una opción: ");
 
-        String opcion = scanner.nextLine().trim();
-
-        switch (opcion) {
+        switch (scanner.nextLine().trim()) {
             case "1":
                 listarLibrosDisponibles();
                 break;
             case "2":
-                buscarLibro();
+                buscarLibroPorTitulo();
                 break;
             case "3":
-                reservarLibro();
+                reservarLibroNombre();
                 break;
             case "4":
                 verMisReservas();
                 break;
             case "5":
+                devolverLibro();
+                break;
+            case "6":
                 usuarioLogueado = null;
-                System.out.println("\n✓ Sesión cerrada");
+                System.out.println("Sesión cerrada.");
                 break;
             default:
-                System.out.println("\n❌ Opción inválida");
+                System.out.println("Opción inválida.");
         }
     }
 
-    private void listarLibrosDisponibles() {
-        System.out.println("\n📚 LIBROS DISPONIBLES:");
-        List<Libro> libros = libroService.listarDisponibles();
-        if (libros.isEmpty()) {
-            System.out.println("No hay libros disponibles");
-        } else {
-            libros.forEach(libro -> System.out.println(
-                "  • " + libro.getTitulo() + " - " + libro.getAutor() +
-                " (ISBN: " + libro.getIsbn() + ") [Stock: " + libro.getStock() + "]"
-            ));
-        }
-    }
-
-    private void buscarLibro() {
-        System.out.print("\nBuscar por título: ");
-        String titulo = scanner.nextLine().trim();
-        List<Libro> resultados = libroService.buscarPorTitulo(titulo);
-        
-        if (resultados.isEmpty()) {
-            System.out.println("\n❌ No se encontraron libros");
-        } else {
-            System.out.println("\n📚 RESULTADOS:");
-            resultados.forEach(libro -> System.out.println(
-                "  • " + libro.getTitulo() + " - " + libro.getAutor() +
-                " (ISBN: " + libro.getIsbn() + ") [" + 
-                (libro.isDisponible() ? "Disponible" : "No disponible") + "]"
-            ));
-        }
-    }
-
-    private void reservarLibro() {
-        System.out.print("\nISBN del libro a reservar: ");
-        String isbn = scanner.nextLine().trim();
-        
-        Libro libro = libroService.obtenerPorIsbn(isbn);
-        if (libro == null) {
-            System.out.println("❌ Libro no encontrado");
-            return;
-        }
-        
-        if (!libro.isDisponible()) {
-            System.out.println("❌ El libro no está disponible");
-            return;
-        }
-
-        System.out.print("Fecha de devolución (yyyy-MM-dd): ");
-        String fechaStr = scanner.nextLine().trim();
-        
-        try {
-            LocalDate fechaDevolucion = LocalDate.parse(fechaStr);
-            if (fechaDevolucion.isBefore(LocalDate.now())) {
-                System.out.println("❌ La fecha debe ser posterior a hoy");
-                return;
-            }
-            
-            boolean prestado = prestamoService.realizarPrestamo(usuarioLogueado.getEmail(), isbn, fechaDevolucion);
-            
-            if (prestado) {
-                System.out.println("\n✓ Libro reservado exitosamente");
-            } else {
-                System.out.println("\n❌ No se pudo realizar la reserva");
-            }
-        } catch (Exception e) {
-            System.out.println("\n❌ Fecha inválida (formato: yyyy-MM-dd)");
-        }
-    }
-
-    private void verMisReservas() {
-        System.out.println("\n📋 MIS RESERVAS:");
-        List<Prestamo> prestamos = prestamoService.listarMisPrestamos(usuarioLogueado.getEmail());
-        
-        if (prestamos.isEmpty()) {
-            System.out.println("No tienes reservas");
-        } else {
-            prestamos.forEach(p -> System.out.println(
-                "  • " + p.getLibro().getTitulo() + " - " + p.getLibro().getAutor() +
-                " (Devolución: " + p.getFechaDevolucion() + ")"
-            ));
-        }
-    }
-
-    // ============ MENÚ ADMIN ============
     private void menuAdmin() {
-        System.out.println("\n╔═══════════════════════════════════╗");
-        System.out.println("║   MENÚ ADMIN - " + usuarioLogueado.getNombre() + "             ║");
-        System.out.println("╚═══════════════════════════════════╝");
+        System.out.println("\n=== MENÚ ADMIN ===");
         System.out.println("1. Listar todos los libros");
         System.out.println("2. Crear libro");
         System.out.println("3. Editar libro");
         System.out.println("4. Borrar libro");
-        System.out.println("5. Ver todas las reservas");
-        System.out.println("6. Cerrar sesión");
-        System.out.print("Selecciona opción: ");
+        System.out.println("5. Ver usuarios");
+        System.out.println("6. Ver todas las reservas");
+        System.out.println("7. Cerrar sesión");
+        System.out.print("Seleccione una opción: ");
 
-        String opcion = scanner.nextLine().trim();
-
-        switch (opcion) {
+        switch (scanner.nextLine().trim()) {
             case "1":
-                listarTodosLibros();
+                listarTodosLosLibros();
                 break;
             case "2":
                 crearLibro();
@@ -248,33 +183,107 @@ public class Menu {
                 borrarLibro();
                 break;
             case "5":
-                verTodasReservas();
+                listarUsuarios();
                 break;
             case "6":
+                verTodasReservas();
+                break;
+            case "7":
                 usuarioLogueado = null;
-                System.out.println("\n✓ Sesión cerrada");
+                System.out.println("Sesión cerrada.");
                 break;
             default:
-                System.out.println("\n❌ Opción inválida");
+                System.out.println("Opción inválida.");
         }
     }
 
-    private void listarTodosLibros() {
-        System.out.println("\n📚 TODOS LOS LIBROS:");
-        List<Libro> libros = libroService.listarTodos();
-        if (libros.isEmpty()) {
-            System.out.println("No hay libros");
-        } else {
-            libros.forEach(libro -> System.out.println(
-                "  • " + libro.getTitulo() + " - " + libro.getAutor() +
-                " (ISBN: " + libro.getIsbn() + ") [Stock: " + libro.getStock() + "] " +
-                (libro.isDisponible() ? "✓" : "✗")
-            ));
+    private void listarTodosLosLibros() {
+        mostrarLibros(libroService.getLd().listarLibros());
+    }
+
+    private void listarLibrosDisponibles() {
+        List<Libro> disponibles = libroService.getLd().listarLibros().stream()
+                .filter(libro -> libro.isDisponible() && libro.getStock() > 0)
+                .toList();
+        mostrarLibros(disponibles);
+    }
+
+    private void buscarLibroPorTitulo() {
+        System.out.print("Título a buscar: ");
+        String titulo = scanner.nextLine().trim().toLowerCase();
+
+        List<Libro> resultados = libroService.getLd().listarLibros().stream()
+                .filter(libro -> libro.getTitulo() != null && libro.getTitulo().toLowerCase().contains(titulo))
+                .toList();
+
+        mostrarLibros(resultados);
+    }
+
+    private void reservarLibroNombre() {
+        System.out.println("Nombre del libro a reservar:");
+        String nombre = scanner.nextLine().trim();
+
+        Libro libro = libroService.getLd().listarLibros().stream()
+                .filter(l -> l.getTitulo() != null && l.getTitulo().equalsIgnoreCase(nombre)).findFirst().orElse(null);
+        if (libro == null) {
+            System.out.println("Libro no encontrado.");
+            return;
         }
+        if (!libro.isDisponible() || libro.getStock() <= 0) {
+            System.out.println("El libro no está disponible.");
+            return;
+        }
+
+        try {
+            LocalDate fechaDevolucion = leerFechaDevolucion();
+            boolean ok = prestamoService.realizarPrestamoTitulo(usuarioLogueado.getEmail(), nombre, fechaDevolucion);
+            System.out.println(ok ? "Reserva realizada correctamente." : "No se pudo realizar la reserva.");
+        } catch (EntradaInvalidaException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    private void reservarLibroIsbn() {
+        System.out.println("ISBN del libro a reservar:");
+        String isbn = scanner.nextLine().trim();
+
+        Libro libro = libroService.getLd().listarLibros().stream()
+                .filter(l -> l.getIsbn() != null && l.getIsbn().equalsIgnoreCase(isbn)).findFirst().orElse(null);
+        if (libro == null) {
+            System.out.println("Libro no encontrado.");
+            return;
+        }
+        if (!libro.isDisponible() || libro.getStock() <= 0) {
+            System.out.println("El libro no está disponible.");
+            return;
+        }
+
+        try {
+            LocalDate fechaDevolucion = leerFechaDevolucion();
+            boolean ok = prestamoService.realizarPrestamoIsbn(usuarioLogueado.getEmail(), isbn, fechaDevolucion);
+            System.out.println(ok ? "Reserva realizada correctamente." : "No se pudo realizar la reserva.");
+        } catch (EntradaInvalidaException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private LocalDate leerFechaDevolucion() {
+        System.out.print("Fecha de devolución (yyyy-MM-dd): ");
+        String fecha = scanner.nextLine().trim();
+        return Validaciones.validarFechaDevolucion(fecha);
+    }
+
+    private void verMisReservas() {
+        mostrarPrestamos(prestamoService.listarMisPrestamos(usuarioLogueado.getEmail()));
+    }
+
+    private void devolverLibro() {
+        System.out.print("ISBN del libro a devolver: ");
+        String isbn = scanner.nextLine().trim();
+        boolean ok = prestamoService.registrarDevolucion(usuarioLogueado.getEmail(), isbn);
+        System.out.println(ok ? "Devolución realizada correctamente." : "No se pudo registrar la devolución.");
     }
 
     private void crearLibro() {
-        System.out.println("\n--- CREAR NUEVO LIBRO ---");
         System.out.print("Título: ");
         String titulo = scanner.nextLine().trim();
         System.out.print("Autor: ");
@@ -284,99 +293,107 @@ public class Menu {
         System.out.print("Género: ");
         String genero = scanner.nextLine().trim();
         System.out.print("Stock: ");
-        
+
         try {
             int stock = Integer.parseInt(scanner.nextLine().trim());
-            boolean creado = libroService.crearLibro(titulo, autor, isbn, genero, stock);
-            if (creado) {
-                System.out.println("\n✓ Libro creado");
-            } else {
-                System.out.println("\n❌ El ISBN ya existe");
-            }
+            boolean ok = libroService.agregarLibro(titulo, autor, isbn, genero, true, stock);
+            System.out.println(ok ? "Libro creado correctamente." : "No se pudo crear el libro.");
         } catch (NumberFormatException e) {
-            System.out.println("\n❌ Stock debe ser un número");
+            System.out.println("El stock debe ser un número.");
         }
     }
 
     private void editarLibro() {
-        System.out.println("\n--- EDITAR LIBRO ---");
         System.out.print("ISBN del libro a editar: ");
         String isbn = scanner.nextLine().trim();
-        
-        Libro libro = libroService.obtenerPorIsbn(isbn);
+
+        Libro libro = libroService.buscarLibro(isbn);
         if (libro == null) {
-            System.out.println("❌ Libro no encontrado");
+            System.out.println("Libro no encontrado.");
             return;
         }
 
-        System.out.println("\nDatos actuales:");
-        System.out.println("  Título: " + libro.getTitulo());
-        System.out.println("  Autor: " + libro.getAutor());
-        System.out.println("  Género: " + libro.getGenero());
-        System.out.println("  Stock: " + libro.getStock());
-
-        System.out.print("\nNuevo título (Enter para no cambiar): ");
+        System.out.print("Nuevo título (Enter para mantener): ");
         String titulo = scanner.nextLine().trim();
-        System.out.print("Nuevo autor (Enter para no cambiar): ");
+        System.out.print("Nuevo autor (Enter para mantener): ");
         String autor = scanner.nextLine().trim();
-        System.out.print("Nuevo género (Enter para no cambiar): ");
+        System.out.print("Nuevo género (Enter para mantener): ");
         String genero = scanner.nextLine().trim();
-        System.out.print("Nuevo stock (Enter para no cambiar): ");
-        String stockStr = scanner.nextLine().trim();
+        System.out.print("Nuevo stock (Enter para mantener): ");
+        String stockTxt = scanner.nextLine().trim();
 
-        // Usar valores actuales si no se ingresa nada
-        if (titulo.isEmpty()) titulo = libro.getTitulo();
-        if (autor.isEmpty()) autor = libro.getAutor();
-        if (genero.isEmpty()) genero = libro.getGenero();
-        int stock = stockStr.isEmpty() ? libro.getStock() : Integer.parseInt(stockStr);
+        if (titulo.isBlank()) titulo = libro.getTitulo();
+        if (autor.isBlank()) autor = libro.getAutor();
+        if (genero.isBlank()) genero = libro.getGenero();
 
-        boolean actualizado = libroService.actualizarLibro(isbn, titulo, autor, genero, stock);
-        if (actualizado) {
-            System.out.println("\n✓ Libro actualizado");
-        } else {
-            System.out.println("\n❌ No se pudo actualizar");
+        int stock;
+        try {
+            stock = stockTxt.isBlank() ? libro.getStock() : Integer.parseInt(stockTxt);
+        } catch (NumberFormatException e) {
+            System.out.println("El stock debe ser un número.");
+            return;
         }
+
+        boolean ok = libroService.actualizarLibro(isbn, titulo, autor, genero, stock);
+        System.out.println(ok ? "Libro actualizado correctamente." : "No se pudo actualizar el libro.");
     }
 
     private void borrarLibro() {
-        System.out.println("\n--- BORRAR LIBRO ---");
         System.out.print("ISBN del libro a borrar: ");
         String isbn = scanner.nextLine().trim();
-        
-        Libro libro = libroService.obtenerPorIsbn(isbn);
-        if (libro == null) {
-            System.out.println("❌ Libro no encontrado");
+        boolean ok = libroService.eliminarLibro(isbn);
+        System.out.println(ok ? "Libro eliminado correctamente." : "No se pudo eliminar el libro.");
+    }
+
+    private void listarUsuarios() {
+        List<Usuario> usuarios = usuarioService.listarTodos();
+        if (usuarios.isEmpty()) {
+            System.out.println("No hay usuarios registrados.");
             return;
         }
 
-        System.out.println("\n⚠️  Vas a borrar: " + libro.getTitulo() + " - " + libro.getAutor());
-        System.out.print("¿Estás seguro? (s/n): ");
-        String confirmacion = scanner.nextLine().trim().toLowerCase();
-        
-        if (confirmacion.equals("s")) {
-            boolean eliminado = libroService.eliminarLibro(isbn);
-            if (eliminado) {
-                System.out.println("\n✓ Libro eliminado");
-            } else {
-                System.out.println("\n❌ No se pudo eliminar");
-            }
-        } else {
-            System.out.println("Cancelado");
-        }
+        System.out.println("\n=== USUARIOS ===");
+        usuarios.forEach(usuario -> System.out.println(
+                "- " + usuario.getNombre() + " | " + usuario.getEmail() + " | " + usuario.getRol()
+        ));
     }
 
     private void verTodasReservas() {
-        System.out.println("\n📋 TODAS LAS RESERVAS:");
-        List<Prestamo> prestamos = prestamoService.listarTodosPrestamos();
-        
-        if (prestamos.isEmpty()) {
-            System.out.println("No hay reservas");
-        } else {
-            prestamos.forEach(p -> System.out.println(
-                "  • " + p.getUsuario().getNombre() + " - " + p.getLibro().getTitulo() +
-                " (Devolución: " + p.getFechaDevolucion() + ")"
-            ));
+        mostrarPrestamos(prestamoService.listarTodosPrestamos());
+    }
+
+    private void mostrarLibros(List<Libro> libros) {
+        if (libros == null || libros.isEmpty()) {
+            System.out.println("No hay libros para mostrar.");
+            return;
+        }
+
+        System.out.println("\n=== LIBROS ===");
+        for (Libro libro : libros) {
+            System.out.println(
+                    "- " + libro.getTitulo() +
+                            " | Autor: " + libro.getAutor() +
+                            " | ISBN: " + libro.getIsbn() +
+                            " | Género: " + libro.getGenero() +
+                            " | Disponible: " + libro.isDisponible() +
+                            " | Stock: " + libro.getStock()
+            );
+        }
+    }
+
+    private void mostrarPrestamos(List<Prestamo> prestamos) {
+        if (prestamos == null || prestamos.isEmpty()) {
+            System.out.println("No hay préstamos para mostrar.");
+            return;
+        }
+
+        System.out.println("\n=== PRÉSTAMOS ===");
+        for (Prestamo prestamo : prestamos) {
+            System.out.println(
+                    "- Usuario: " + prestamo.getUsuario().getNombre() +
+                            " | Libro: " + prestamo.getLibro().getTitulo() +
+                            " | Devuelve: " + prestamo.getFechaDevolucion()
+            );
         }
     }
 }
-

@@ -1,17 +1,35 @@
 package Common;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+
 public class Validaciones{
 
     public static boolean validarEmail(String email) {
-        // Expresión regular para validar el formato del correo electrónico
-        String regex = "^[A-Za-z0-9+_.-]+@(.+)$";
-        return email.matches(regex);
+        // Validación sencilla: algo@algo (no espacios, un solo @ implícito)
+        // Usamos un patrón que exige al menos un carácter antes y después de la arroba
+        String regex = "^[^@\\s]+@[^@\\s]+$";
+        return email != null && email.matches(regex);
     }
 
-    public static boolean validarTelefono(String telefono) {
-        // Expresión regular para validar el formato del número de teléfono
-        String regex = "^\\d{10}$";
-        return telefono.matches(regex);
+
+    // Valida que la contraseña tenga al menos 4 caracteres y sólo contenga letras o números
+    public static boolean validarPassword(String password) {
+        if (password == null) return false;
+        String regex = "^[A-Za-z0-9]{4,}$";
+        return password.matches(regex);
+    }
+
+    public static LocalDate validarFechaDevolucion(String fechaTexto) {
+        try {
+            LocalDate fecha = LocalDate.parse(fechaTexto);
+            if (fecha.isBefore(LocalDate.now())) {
+                throw new EntradaInvalidaException("La fecha debe ser hoy o posterior.");
+            }
+            return fecha;
+        } catch (DateTimeParseException e) {
+            throw new EntradaInvalidaException("Fecha invalida. Usa yyyy-MM-dd y una fecha real (ej: 2026-06-30).");
+        }
     }
 
 
