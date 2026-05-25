@@ -1,0 +1,74 @@
+Guion de presentación del proyecto: Biblioteca (versión para público no técnico)
+
+Duración estimada: 5-8 minutos
+
+1) Apertura
+- Presentación breve: Esta es una aplicación sencilla para gestionar una biblioteca. Permite iniciar sesión con dos tipos de usuarios (administrador y usuario normal), ver y buscar libros, reservarlos y registrar devoluciones. Los datos se guardan en archivos en el ordenador (no en una base de datos remota).
+
+2) Idea principal
+- Ventaja: cada parte hace su trabajo y se puede cambiar una sin romper las otras (por ejemplo, poner una pantalla gráfica sin tocar la parte que guarda los archivos).
+
+3) Ejemplo de uso (flujo simple: reservar un libro)
+- Paso 1: El usuario abre la aplicación y entra con su correo y contraseña.
+- Paso 2: Busca un libro por título o por código (ISBN).
+- Paso 3: Si el libro está disponible, indica la fecha de devolución y confirma la reserva.
+- Paso 4: La aplicación reduce la cantidad disponible del libro y guarda la reserva en un archivo.
+- Al final, el usuario puede ver sus reservas y el administrador puede ver y gestionar todas las reservas.
+
+4) Cómo está organizada la aplicación
+- Interfaz (Menús): es la parte que habla con la persona. Pide datos por teclado y muestra respuestas en pantalla.
+- Lógica (Servicios): es la parte que decide qué se puede hacer. Por ejemplo, comprueba que un usuario exista, que un libro tenga stock, o que una fecha sea válida.
+- Guardado (DAOs): es la parte que sabe cómo leer y escribir ficheros en el disco. Guarda las listas de libros, usuarios y reservas.
+- Modelos (Datos): son las piezas que representan un libro, un usuario o una reserva: son estructuras con campos como "título", "autor", "email" o "fecha".
+
+5) Qué hace cada fichero/clase (explicación para no expertos)
+
+- `Main` (arranque)
+  - ¿Para qué sirve?: Es el punto de inicio de la aplicación. Prepara las piezas que hacen falta y lanza el menú.
+  - Razón para mencionarlo: cambia poco; su función es "encender" la aplicación.
+
+- `Menu` (interfaz de usuario)
+  - ¿Para qué sirve?: Muestra las opciones, lee lo que escribe la persona y muestra mensajes de éxito o error.
+  - Ejemplo simple: cuando pides un email y una contraseña, el `Menu` los envía al servicio que comprueba si son correctos.
+
+- `UsuarioService` (gestión de usuarios)
+  - ¿Para qué sirve?: Gestiona registros, inicios de sesión y cambios de contraseña. También verifica que los datos tengan sentido (por ejemplo, que el email tenga una "@" y que la contraseña tenga al menos 4 caracteres).
+  - ¿Qué pasa si falla?: Devuelve un mensaje claro para que quien use la aplicación corrija lo que haya escrito mal.
+
+- `LibroService` (gestión de libros)
+  - ¿Para qué sirve?: Controla añadir, modificar o eliminar libros y buscar por título o código.
+  - ¿Qué hace importante?: Evita que se creen dos libros con el mismo código y controla cuántos ejemplares quedan.
+
+- `PrestamoService` (gestión de reservas)
+  - ¿Para qué sirve?: Maneja las reservas: comprueba que el usuario existe, que el libro está disponible y guarda la reserva.
+  - ¿Qué pasa si no hay stock?: Informa al usuario de que no puede reservar porque no quedan ejemplares.
+
+- `LibroDao`, `UsuarioDao`, `PrestamoDao` (guardar y leer datos)
+  - ¿Para qué sirven?: Son las partes que leen y escriben archivos con la información. Por ejemplo: la lista de libros se guarda en un archivo llamado `libros.json`.
+  - Nota práctica: los datos se mantienen entre ejecuciones porque están en ficheros en el disco.
+
+- `Validaciones`, `ConfigManager`, `Constantes`, `EntradaInvalidaException` (ayudas y mensajes)
+  - ¿Para qué sirven?: Reúnen reglas comunes (por ejemplo, comprobar formatos), lecturas de configuración (dónde están los archivos), textos usados en mensajes y una excepción que se lanza cuando la entrada es incorrecta.
+  - Ventaja: centralizar estas cosas permite mantener la aplicación más ordenada.
+
+6) Ejemplos de errores comunes y cómo se muestran
+- Si escribes mal la fecha de devolución (p. ej. día o mes imposibles) la aplicación te dirá "Fecha inválida. Usa formato yyyy-MM-dd y una fecha real".
+- Si pones un email sin "@" la aplicación dirá que el email no es válido.
+- Si intentas reservar un libro sin stock te dirá que no es posible.
+
+7) Qué puede mejorar en el futuro (para comentar al final)
+- Hacer que varias personas puedan usar la aplicación a la vez sin taparse los cambios (actualmente no está pensada para muchos usuarios concurrentes).
+- Conectar los datos a una base de datos real si la aplicación crece mucho.
+- Añadir pruebas automáticas para comprobar que las funciones principales no fallan al hacer cambios.
+
+8) Demo rápida sugerida (1-2 minutos)
+- Abre la aplicación y regístrate con un email de prueba.
+- Inicia sesión con ese usuario, busca un libro (por ejemplo "1984") y realiza una reserva indicando una fecha válida como 2026-06-30.
+- Verifica que la reserva aparece en tu lista de reservas.
+
+9) Mensajes útiles para el público (cierre)
+- "La aplicación está pensada para aprender buenas prácticas de organización de código y para demostrar un flujo completo: registro, búsqueda, reserva y devoluciones, guardando todo en ficheros locales."
+- "Si queremos, como siguiente paso podemos darle una interfaz gráfica o pasar los datos a una base de datos para uso real."
+
+---
+Archivo guardado: guion_presentacion.txt
