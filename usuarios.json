@@ -1,0 +1,26 @@
+[
+  {
+    "nombre": "Admin",
+    "email": "admin@mail.com",
+    "password": "a123",
+    "rol": "ADMIN"
+  },
+  {
+    "nombre": "Paca",
+    "email": "pacapacheco3202@lolalolitaland.werg",
+    "password": "sarandonga",
+    "rol": "USER"
+  },
+  {
+    "nombre": "Juan",
+    "email": "juan@mail.com",
+    "password": "usr123",
+    "rol": "USER"
+  },
+  {
+    "nombre": "Ana",
+    "email": "ana@mail.com",
+    "password": "usr123",
+    "rol": "USER"
+  }
+]

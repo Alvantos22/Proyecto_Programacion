@@ -106,13 +106,13 @@ public class UsuarioService {
     }
 
     private void validarEmail(String email) {
-        if (!Validaciones.validarEmail(email)) {
+        if (Validaciones.validarEmail(email)) {
             throw new EntradaInvalidaException("Email inválido. Usa el formato algo@algo.");
         }
     }
 
     private void validarPassword(String password) {
-        if (!Validaciones.validarPassword(password)) {
+        if (Validaciones.validarPassword(password)) {
             throw new EntradaInvalidaException("Contraseña inválida. Debe tener al menos 4 caracteres alfanuméricos.");
         }
     }

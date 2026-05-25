@@ -41,7 +41,7 @@ public class Menu {
                 menuUsuario();
             }
         }
-        scanner.close();
+
     }
 
     private boolean menuInicio() {
@@ -108,7 +108,7 @@ public class Menu {
     private String leerEmailValido() {
         System.out.print("Email: ");
         String email = scanner.nextLine().trim();
-        if (!Validaciones.validarEmail(email)) {
+        if (Validaciones.validarEmail(email)) {
             throw new EntradaInvalidaException("Email inválido. Usa el formato algo@algo.");
         }
         return email;
@@ -117,7 +117,7 @@ public class Menu {
     private String leerPasswordValida() {
         System.out.print("Contraseña: ");
         String password = scanner.nextLine().trim();
-        if (!Validaciones.validarPassword(password)) {
+        if (Validaciones.validarPassword(password)) {
             throw new EntradaInvalidaException("Contraseña inválida. Mínimo 4 caracteres alfanuméricos.");
         }
         return password;
